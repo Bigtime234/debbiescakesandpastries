@@ -8,6 +8,20 @@
       "when": 1751052232605,
       "tag": "0000_famous_titania",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751469099767,
+      "tag": "0001_lyrical_namor",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751574574013,
+      "tag": "0002_bright_nextwave",
+      "breakpoints": true
     }
   ]
 }

@@ -28,15 +28,23 @@ import { InputTags } from "./input-tags"
 import VariantImages from "./variant-images"
 import { useAction } from "next-safe-action/hooks"
 import { createVariant } from "@/lib/actions/create-variant"
-import { toast } from "sonner"
-import { forwardRef, useEffect, useState } from "react"
 import { deleteVariant } from "@/lib/actions/delete-variant"
+import { toast } from "sonner"
+import { forwardRef, useEffect, useState, useCallback } from "react"
 
 type VariantProps = {
   children: React.ReactNode
   editMode: boolean
   productID?: number
   variant?: VariantsWithImagesTags
+}
+
+// Type for action results
+type ActionResult = {
+  data?: {
+    error?: string
+    success?: string
+  }
 }
 
 export const ProductVariant = forwardRef<HTMLDivElement, VariantProps>(
@@ -56,76 +64,106 @@ export const ProductVariant = forwardRef<HTMLDivElement, VariantProps>(
 
     const [open, setOpen] = useState(false)
 
-    const setEdit = () => {
+    // Memoize the setEdit function to prevent unnecessary re-renders
+    const setEdit = useCallback(() => {
       if (!editMode) {
-        form.reset()
+        form.reset({
+          tags: [],
+          variantImages: [],
+          color: "#000000",
+          editMode: false,
+          id: undefined,
+          productID,
+          productType: "Black Notebook",
+        })
         return
       }
+      
       if (editMode && variant) {
-        form.setValue("editMode", true)
-        form.setValue("id", variant.id)
-        form.setValue("productID", variant.productID)
-        form.setValue("productType", variant.productType)
-        form.setValue("color", variant.color)
-        form.setValue(
-          "tags",
-          variant.variantTags.map((tag) => tag.tag)
-        )
-        form.setValue(
-          "variantImages",
-          variant.variantImages.map((img) => ({
+        form.reset({
+          editMode: true,
+          id: variant.id,
+          productID: variant.productID,
+          productType: variant.productType,
+          color: variant.color,
+          tags: variant.variantTags.map((tag) => tag.tag),
+          variantImages: variant.variantImages.map((img) => ({
             name: img.name,
             size: img.size,
             url: img.url,
-          }))
-        )
+          })),
+        })
       }
-    }
+    }, [editMode, variant, form, productID])
 
     useEffect(() => {
       setEdit()
-    }, [variant])
+    }, [setEdit])
 
     const { execute, status } = useAction(createVariant, {
       onExecute() {
-        toast.loading("Creating variant", { duration: 1 })
+        toast.loading("Creating variant")
         setOpen(false)
       },
-      onSuccess(data) {
-        if ((data.data as any)?.error) {
-          toast.error((data.data as any).error)
+      onSuccess(data: ActionResult) {
+        toast.dismiss()
+        
+        if (data?.data?.error) {
+          toast.error(data.data.error)
         }
-        if ((data.data as any)?.success) {
-          toast.success((data.data as any).success)
+        if (data?.data?.success) {
+          toast.success(data.data.success)
         }
+      },
+      onError(error) {
+        toast.dismiss()
+        
+        toast.error("Failed to create variant")
+        console.error("Create variant error:", error)
       },
     })
 
     const variantAction = useAction(deleteVariant, {
       onExecute() {
-        toast.loading("Deleting variant", { duration: 1 })
+        toast.loading("Deleting variant")
         setOpen(false)
       },
-      onSuccess(data) {
-        if ((data.data as any)?.error) {
-          toast.error((data.data as any).error)
+      onSuccess(data: ActionResult) {
+        toast.dismiss()
+        
+        if (data?.data?.error) {
+          toast.error(data.data.error)
         }
-        if ((data.data as any)?.success) {
-          toast.success((data.data as any).success)
+        if (data?.data?.success) {
+          toast.success(data.data.success)
         }
+      },
+      onError(error) {
+        toast.dismiss()
+        
+        toast.error("Failed to delete variant")
+        console.error("Delete variant error:", error)
       },
     })
 
     function onSubmit(values: z.infer<typeof VariantSchema>) {
-      // Do something with the form values.
-      // ✅ This will be type-safe and validated.
-
       execute(values)
     }
 
+    // Reset form when dialog closes
+    const handleOpenChange = (newOpen: boolean) => {
+      setOpen(newOpen)
+      if (!newOpen) {
+        // Small delay to allow dialog to close smoothly
+        setTimeout(() => {
+          setEdit()
+        }, 100)
+      }
+    }
+
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger>{children}</DialogTrigger>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-[860px]">
           <DialogHeader>
             <DialogTitle>
@@ -150,7 +188,6 @@ export const ProductVariant = forwardRef<HTMLDivElement, VariantProps>(
                         {...field}
                       />
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
@@ -164,7 +201,6 @@ export const ProductVariant = forwardRef<HTMLDivElement, VariantProps>(
                     <FormControl>
                       <Input type="color" {...field} />
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
@@ -185,7 +221,20 @@ export const ProductVariant = forwardRef<HTMLDivElement, VariantProps>(
                   </FormItem>
                 )}
               />
-              <VariantImages />
+              <FormField
+                control={form.control}
+                name="variantImages"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Variant Images</FormLabel>
+                    <FormControl>
+                      <VariantImages {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
               <div className="flex gap-4 items-center justify-center">
                 {editMode && variant && (
                   <Button
@@ -201,14 +250,10 @@ export const ProductVariant = forwardRef<HTMLDivElement, VariantProps>(
                   </Button>
                 )}
                 <Button
-                  disabled={
-                    status === "executing" ||
-                    !form.formState.isValid ||
-                    !form.formState.isDirty
-                  }
                   type="submit"
+                  className="min-w-[120px]"
                 >
-                  {editMode ? "Update Variant" : "Create Variant"}
+                  {status === "executing" ? "Submitting..." : editMode ? "Update Variant" : "Create Variant"}
                 </Button>
               </div>
             </form>

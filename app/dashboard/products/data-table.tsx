@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ChevronLeftIcon, ChevronRight, ChevronRightIcon } from "lucide-react"
@@ -34,17 +34,44 @@ import { ChevronLeftIcon, ChevronRight, ChevronRightIcon } from "lucide-react"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  onDataUpdate?: (updatedData: TData[]) => void // Optional callback for data updates
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onDataUpdate,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [tableData, setTableData] = useState<TData[]>(data)
+
+  // Update table data when prop changes
+  useEffect(() => {
+    setTableData(data)
+  }, [data])
+
+  // Function to remove item from table (for optimistic updates)
+  const removeItem = (id: number) => {
+    const updatedData = tableData.filter((item: any) => item.id !== id)
+    setTableData(updatedData)
+    if (onDataUpdate) {
+      onDataUpdate(updatedData)
+    }
+  }
+
+  // Pass removeItem function to columns context
+  const columnsWithContext = columns.map(column => ({
+    ...column,
+    meta: {
+      ...column.meta,
+      removeItem,
+    }
+  }))
+
   const table = useReactTable({
-    data,
-    columns,
+    data: tableData,
+    columns: columnsWithContext,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

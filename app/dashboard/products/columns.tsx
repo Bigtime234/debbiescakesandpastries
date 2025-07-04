@@ -25,6 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { ProductVariant } from "./product-variant"
+import { useRouter } from "next/navigation"
 
 type ProductColumn = {
   title: string
@@ -43,19 +44,30 @@ type ActionResult = {
 }
 
 const ActionCell = ({ row }: { row: Row<ProductColumn> }) => {
+  const router = useRouter()
+  
   const { status, execute } = useAction(deleteProduct, {
     onSuccess: (data: ActionResult) => {
+      // Dismiss the loading toast
+      toast.dismiss()
+      
       if (data?.data?.error) {
         toast.error(data.data.error)
       }
       if (data?.data?.success) {
         toast.success(data.data.success)
+        // Refresh the page data to reflect the deletion
+        router.refresh()
       }
     },
     onExecute: () => {
-      toast.loading("Deleting Product")
+      toast.loading("Deleting Product...", {
+        id: "delete-product", // Give the toast an ID so we can dismiss it later
+      })
     },
     onError: (error) => {
+      // Dismiss the loading toast
+      toast.dismiss("delete-product")
       toast.error("Failed to delete product")
       console.error("Delete error:", error)
     },
@@ -67,6 +79,7 @@ const ActionCell = ({ row }: { row: Row<ProductColumn> }) => {
     try {
       execute({ id: product.id })
     } catch (error) {
+      toast.dismiss("delete-product")
       toast.error("Failed to delete product")
       console.error("Delete error:", error)
     }
@@ -88,8 +101,9 @@ const ActionCell = ({ row }: { row: Row<ProductColumn> }) => {
         <DropdownMenuItem
           onClick={handleDelete}
           className="dark:focus:bg-destructive focus:bg-destructive/50 cursor-pointer"
+          disabled={status === "executing"} // Disable button while deleting
         >
-          Delete Product
+          {status === "executing" ? "Deleting..." : "Delete Product"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -111,44 +125,51 @@ export const columns: ColumnDef<ProductColumn>[] = [
     cell: ({ row }) => {
       const variants = row.getValue("variants") as VariantsWithImagesTags[]
       
-      // Safety check for variants
-      if (!variants || !Array.isArray(variants) || variants.length === 0) {
-        return <div className="text-gray-500 text-xs">No variants</div>
-      }
+      // Debug log to see what data we're getting
+      console.log("Variants data for product", row.original.id, ":", variants)
+      
+      // More robust safety check for variants
+      const hasVariants = variants && Array.isArray(variants) && variants.length > 0
       
       return (
-        <div className="flex gap-2">
-          {variants.map((variant: VariantsWithImagesTags) => (
-            <div key={variant.id}>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <ProductVariant
-                      productID={variant.productID}
-                      variant={variant}
-                      editMode={true}
-                    >
-                      <div
-                        className="w-5 h-5 rounded-full border border-gray-300"
-                        style={{ background: variant.color || '#000000' }}
-                      />
-                    </ProductVariant>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{variant.productType || 'Unknown Type'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          ))}
+        <div className="flex gap-2 items-center">
+          {hasVariants ? (
+            variants.map((variant: VariantsWithImagesTags) => (
+              <div key={variant.id}>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <ProductVariant
+                        productID={variant.productID}
+                        variant={variant}
+                        editMode={true}
+                      >
+                        <div
+                          className="w-5 h-5 rounded-full border border-gray-300 cursor-pointer hover:border-gray-500 transition-colors"
+                          style={{ background: variant.color || '#000000' }}
+                        />
+                      </ProductVariant>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{variant.productType || 'Unknown Type'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-500 text-xs">No variants</div>
+          )}
+          
+          {/* Add New Variant Button - Always show */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span>
-                  <ProductVariant productID={row.original.id} editMode={false}>
-                    <PlusCircle className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
-                  </ProductVariant>
-                </span>
+                <ProductVariant productID={row.original.id} editMode={false}>
+                  <div className="cursor-pointer inline-flex items-center justify-center">
+                    <PlusCircle className="h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors" />
+                  </div>
+                </ProductVariant>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Create a new product variant</p>
@@ -166,7 +187,7 @@ export const columns: ColumnDef<ProductColumn>[] = [
       const priceValue = row.getValue("price")
       const price = typeof priceValue === 'string' ? parseFloat(priceValue) : (priceValue as number)
       const formatted = new Intl.NumberFormat("en-US", {
-        currency: "USD",
+        currency: "NGN",
         style: "currency",
       }).format(isNaN(price) ? 0 : price)
       return <div className="font-medium text-xs">{formatted}</div>
@@ -205,4 +226,4 @@ export const columns: ColumnDef<ProductColumn>[] = [
     header: "Actions",
     cell: ActionCell,
   },
-]
+]   

@@ -11,7 +11,7 @@ export const ourFileRouter = {
   ),
 
   variantUploader: f({
-    image: { maxFileCount: 10, maxFileSize: "4MB" },
+    image: { maxFileCount: 10, maxFileSize: "2MB" },
   })
     .onUploadError(async ({ error }) => {
       console.log(error)

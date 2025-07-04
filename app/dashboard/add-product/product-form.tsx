@@ -29,6 +29,7 @@ import { createProduct } from "@/lib/actions/create-product"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { getProduct } from "@/lib/actions/get-products"
+import { TbCurrencyNaira } from "react-icons/tb";
 
 import { useEffect } from "react"
 
@@ -154,14 +155,14 @@ export default function ProductForm() {
                   <FormLabel>Product Price</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
-                      <DollarSign
+                      <TbCurrencyNaira
                         size={36}
                         className="p-2 bg-muted rounded-md"
                       />
                       <Input
                         {...field}
                         type="number"
-                        placeholder="Your price in USD"
+                        placeholder="Your price in Naira"
                         step="0.1"
                         min={0}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}

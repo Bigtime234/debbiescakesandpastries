@@ -11,6 +11,7 @@
     "db:push": "drizzle-kit push:pg"
   },
   "dependencies": {
+    "@algolia/autocomplete-js": "^1.19.2",
     "@auth/drizzle-adapter": "^1.10.0",
     "@hookform/resolvers": "^5.1.1",
     "@neondatabase/serverless": "^1.0.1",
@@ -30,6 +31,7 @@
     "@tiptap/react": "^2.23.1",
     "@tiptap/starter-kit": "^2.23.1",
     "@uploadthing/react": "^7.3.2",
+    "algoliasearch": "^4.25.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-kit": "^0.31.4",

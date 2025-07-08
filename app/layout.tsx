@@ -2,6 +2,15 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "./components/navigation/nav";
+import { Toaster } from "@/components/ui/sooner";
+import {Roboto} from "next/font/google";
+
+
+
+const roboto = Roboto({
+  weight: ["400", "500", "700", "900"],
+  subsets: ["latin"],
+})
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,8 +37,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Nav />
+        <div className="flex-grow px-6 md:px-12 mx-auto max-w-8xl">
+          <Nav />
+        <Toaster/>
         {children}
+        </div>
+        
       </body>
     </html>
   );

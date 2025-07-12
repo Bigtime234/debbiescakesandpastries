@@ -15,6 +15,20 @@
       "when": 1751977275065,
       "tag": "0001_far_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752268476466,
+      "tag": "0002_light_tomas",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752325290968,
+      "tag": "0003_first_violations",
+      "breakpoints": true
     }
   ]
 }

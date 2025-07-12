@@ -176,18 +176,6 @@ export const variantTagsRelations = relations(variantTags, ({ one }) => ({
   }),
 }))
 
-
-
-
-
-
-
-
-
-
-
-
-
 export const reviews = pgTable(
   "reviews",
   {
@@ -225,5 +213,77 @@ export const reviewRelations = relations(reviews, ({ one }) => ({
 
 export const userRelations = relations(users, ({ many }) => ({
   reviews: many(reviews, { relationName: "user_reviews" }),
- 
+  orders: many(orders, { relationName: "user_orders" }),
+}))
+
+// Updated orders table with all customer and shipping details
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  userID: text("userID")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  total: real("total").notNull(),
+  status: text("status").notNull().default("pending"), // pending, processing, succeeded, completed, cancelled
+  created: timestamp("created").defaultNow(),
+  receiptURL: text("receiptURL"),
+  paymentIntentID: text("paymentIntentID"),
+  
+  // Payment information
+  paymentMethod: text("paymentMethod").default("PalmPay"),
+  
+  // Customer information
+  customerName: text("customerName"),
+  customerEmail: text("customerEmail"),
+  customerPhone: text("customerPhone"),
+  customerWhatsapp: text("customerWhatsapp"),
+  
+  // Shipping information
+  shippingAddress: text("shippingAddress"),
+  shippingCity: text("shippingCity"),
+  shippingState: text("shippingState"),
+  shippingPostalCode: text("shippingPostalCode"),
+  
+  // Additional timestamps
+  updatedAt: timestamp("updatedAt").defaultNow(),
+})
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orders.userID],
+    references: [users.id],
+    relationName: "user_orders",
+  }),
+  orderProduct: many(orderProduct, { relationName: "orderProduct" }),
+}))
+
+export const orderProduct = pgTable("orderProduct", {
+  id: serial("id").primaryKey(),
+  quantity: integer("quantity").notNull(),
+  productVariantID: serial("productVariantID")
+    .notNull()
+    .references(() => productVariants.id, { onDelete: "cascade" }),
+  productID: serial("productID")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  orderID: serial("orderID")
+    .notNull()
+    .references(() => orders.id, { onDelete: "cascade" }),
+})
+
+export const orderProductRelations = relations(orderProduct, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderProduct.orderID],
+    references: [orders.id],
+    relationName: "orderProduct",
+  }),
+  product: one(products, {
+    fields: [orderProduct.productID],
+    references: [products.id],
+    relationName: "products",
+  }),
+  productVariants: one(productVariants, {
+    fields: [orderProduct.productVariantID],
+    references: [productVariants.id],
+    relationName: "productVariants",
+  }),
 }))

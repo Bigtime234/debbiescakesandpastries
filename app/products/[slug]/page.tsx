@@ -8,6 +8,7 @@ import ProductPick from "@/app/components/products/product-pick"
 import ProductShowcase from "@/app/components/products/product-showcase"
 import Reviews from "@/app/components/reviews/reviews"
 import { getReviewAverage } from "@/lib/review-avarage"
+import AddCart from "@/app/components/cart/add-cart"
 
 export const revalidate = 60
 
@@ -81,6 +82,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
                 />
               ))}
             </div>
+            <AddCart/>
           </div>
         </section>
          <Reviews productID={variant.productID} />

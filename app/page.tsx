@@ -2,6 +2,7 @@
 import Products from "@/app/components/products/products"
 import { db } from "@/server"
 import ProductTags from "@/app/components/products/product-tags"
+import HeroSection from "@/app/components/hero-section";
 
 
 
@@ -25,10 +26,11 @@ export default async function Home() {
 
 
  return (
-    <main className="">
-     
-      <ProductTags />
-      <Products variants={data} />
-    </main>
-  )
+   <main className="w-full">
+  <HeroSection />
+  <ProductTags />
+  <Products variants={data} />
+</main>
+ )
+
 }

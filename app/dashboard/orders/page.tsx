@@ -256,11 +256,11 @@ export default async function OrdersPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <DialogTrigger className="w-full text-left">
+                              <DialogTrigger asChild>
+                                <DropdownMenuItem>
                                   View details
-                                </DialogTrigger>
-                              </DropdownMenuItem>
+                                </DropdownMenuItem>
+                              </DialogTrigger>
                               {isAdmin && order.status === "pending" && (
                                 <DropdownMenuItem>
                                   <form action={async () => {
@@ -284,13 +284,14 @@ export default async function OrdersPage() {
                                 {isAdmin && <Badge variant="secondary">Admin View</Badge>}
                               </DialogTitle>
                               <DialogDescription>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <CalendarClock className="h-4 w-4" />
-                                  <span>
-                                    Placed on {order.created ? formatOrderDate(order.created.toISOString()) : "N/A"}
-                                  </span>
-                                </div>
+                                Order details and information
                               </DialogDescription>
+                              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                                <CalendarClock className="h-4 w-4" />
+                                <span>
+                                  Placed on {order.created ? formatOrderDate(order.created.toISOString()) : "N/A"}
+                                </span>
+                              </div>
                             </DialogHeader>
 
                             <div className="mt-6 space-y-6">

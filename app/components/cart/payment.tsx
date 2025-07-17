@@ -110,7 +110,7 @@ export default function CheckoutForm() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Order Confirmed!</h2>
           <p className="text-gray-600 mb-6">
-            Thank you for your order! We'll process it shortly and contact you via WhatsApp.
+            Thank you for your order! We'll process it shortly and contact you via Email.
           </p>
           <button 
             onClick={() => {

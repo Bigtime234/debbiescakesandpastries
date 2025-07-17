@@ -1,14 +1,26 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "lh3.googleusercontent.com" },
-      { protocol: "https", hostname: "utfs.io" },
-    ],
-  },
-  eslint: {
-    ignoreDuringBuilds: true, // ✅ This disables ESLint errors during `next build`
-  },
-};
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
 
-export default nextConfig;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+
+  {
+    rules: {
+      // ✅ Ignore unused variables (but still warn if vars start with _)
+      "@typescript-eslint/no-unused-vars": [
+        "warn", // or "off" to fully disable
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
+];
+
+export default eslintConfig;

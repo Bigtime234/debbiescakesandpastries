@@ -13,6 +13,7 @@ import CartItems from "./cart-items"
 import CartMessage from "./cart-message"
 import Payment from "./payment"
 import OrderConfirmed from "./order-confirmed"
+import CartProgress from "./cart-progress"
 
 export default function cartDrawer () {
     const {cart, checkoutProgress, setCheckoutProgress, cartOpen, setCartOpen} = useCartStore()
@@ -40,6 +41,7 @@ export default function cartDrawer () {
           <CartMessage />
          
         </DrawerHeader>
+        <CartProgress />
         <div className="px-4 pb-4 overflow-y-auto">
           {checkoutProgress === "cart-page" && <CartItems />}
           {checkoutProgress === "payment-page" && <Payment />}

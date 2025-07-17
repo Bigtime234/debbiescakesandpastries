@@ -9,6 +9,8 @@ import HeroSection from "@/app/components/hero-section";
 
 
 
+
+
 export default async function Home() {
   const data = await db.query.productVariants.findMany({
     with: {
@@ -27,6 +29,7 @@ export default async function Home() {
 
  return (
    <main className="w-full">
+
   <HeroSection />
   <ProductTags />
   <Products variants={data} />

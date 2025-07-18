@@ -1,4 +1,3 @@
-// app/products/[slug]/page.tsx
 import ProductType from "@/app/components/products/product-tags"
 import { db } from "@/server"
 import { productVariants } from "@/server/schema"
@@ -13,7 +12,10 @@ import AddCart from "@/app/components/cart/add-cart"
 
 export const revalidate = 60
 
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
+// ✅ FIX: Add correct return type here
+export async function generateStaticParams(): Promise<
+  { slug: string }[]
+> {
   const data = await db.query.productVariants.findMany({
     with: {
       variantImages: true,
@@ -23,14 +25,19 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
     orderBy: (productVariants, { desc }) => [desc(productVariants.id)],
   })
 
-  return data.map((variant) => ({ slug: variant.id.toString() }))
+  return data.map((variant) => ({
+    slug: variant.id.toString(),
+  }))
 }
 
-export default async function Page({
-  params,
-}: {
-  params: { slug: string }
-}) {
+// ✅ FIX: Explicitly type PageProps
+type PageProps = {
+  params: {
+    slug: string
+  }
+}
+
+export default async function Page({ params }: PageProps) {
   const variant = await db.query.productVariants.findFirst({
     where: eq(productVariants.id, Number(params.slug)),
     with: {
@@ -59,7 +66,9 @@ export default async function Page({
         </div>
         <div className="flex flex-col flex-1">
           <h2 className="text-2xl font-bold">{variant.product.title}</h2>
-          <ProductType variants={variant.product.productVariants} />
+          <div>
+            <ProductType variants={variant.product.productVariants} />
+          </div>
           <Separator className="my-2" />
           <p className="text-2xl font-medium py-2">
             {formatPrice(variant.product.price)}

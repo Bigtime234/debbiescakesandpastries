@@ -10,11 +10,12 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // ✅ Pass strings as individual arguments, not as an array
   ...compat.extends(
-    "plugin:@typescript-eslint/recommended", // TS rules
-    "plugin:react/recommended",              // React rules
-    "plugin:react-hooks/recommended",        // React hooks
-    "plugin:@next/next/recommended"          // Next.js rules
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:@next/next/recommended"
   ),
   {
     rules: {

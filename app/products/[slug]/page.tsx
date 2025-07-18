@@ -1,4 +1,4 @@
-import ProductType from "@/app/components/products/product-tags"
+import ProductType from "@/app/components/products/product-type"
 import { db } from "@/server"
 import { productVariants } from "@/server/schema"
 import { eq } from "drizzle-orm"

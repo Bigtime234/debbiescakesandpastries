@@ -10,9 +10,10 @@ import Reviews from "@/app/components/reviews/reviews"
 import { getReviewAverage } from "@/lib/review-avarage"
 import AddCart from "@/app/components/cart/add-cart"
 
+// Revalidate every 60 seconds
 export const revalidate = 60
 
-// ✅ FIX: Add correct return type here
+// ✅ Required by Next.js for dynamic static pages
 export async function generateStaticParams(): Promise<
   { slug: string }[]
 > {
@@ -30,8 +31,8 @@ export async function generateStaticParams(): Promise<
   }))
 }
 
-// ✅ FIX: Explicitly type PageProps
-type PageProps = {
+// ✅ Page component with correctly typed params
+interface PageProps {
   params: {
     slug: string
   }
@@ -45,13 +46,17 @@ export default async function Page({ params }: PageProps) {
         with: {
           reviews: true,
           productVariants: {
-            with: { variantImages: true, variantTags: true },
+            with: {
+              variantImages: true,
+              variantTags: true,
+            },
           },
         },
       },
     },
   })
 
+  // If not found, return null or a fallback
   if (!variant) return null
 
   const reviewAvg = getReviewAverage(
@@ -75,7 +80,7 @@ export default async function Page({ params }: PageProps) {
           </p>
           <div
             dangerouslySetInnerHTML={{ __html: variant.product.description }}
-          ></div>
+          />
           <p className="text-secondary-foreground font-medium my-2">
             Available Colors
           </p>

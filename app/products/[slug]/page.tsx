@@ -1,3 +1,4 @@
+// app/products/[slug]/page.tsx
 import ProductType from "@/app/components/products/product-tags"
 import { db } from "@/server"
 import { productVariants } from "@/server/schema"
@@ -12,7 +13,7 @@ import AddCart from "@/app/components/cart/add-cart"
 
 export const revalidate = 60
 
-export async function generateStaticParams() {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   const data = await db.query.productVariants.findMany({
     with: {
       variantImages: true,
@@ -21,20 +22,21 @@ export async function generateStaticParams() {
     },
     orderBy: (productVariants, { desc }) => [desc(productVariants.id)],
   })
-  if (data) {
-    const slugID = data.map((variant) => ({ slug: variant.id.toString() }))
-    return slugID
-  }
-  return []
+
+  return data.map((variant) => ({ slug: variant.id.toString() }))
 }
 
-export default async function Page({ params }: { params: { slug: string } }) {
+export default async function Page({
+  params,
+}: {
+  params: { slug: string }
+}) {
   const variant = await db.query.productVariants.findFirst({
     where: eq(productVariants.id, Number(params.slug)),
     with: {
       product: {
         with: {
-          reviews:true,
+          reviews: true,
           productVariants: {
             with: { variantImages: true, variantTags: true },
           },
@@ -43,50 +45,49 @@ export default async function Page({ params }: { params: { slug: string } }) {
     },
   })
 
-  if (variant) {
-     const reviewAvg = getReviewAverage(
-      variant?.product.reviews.map((r) => r.rating)
-    )
-    return (
-      <main>
-        <section className="flex flex-col lg:flex-row gap-4 lg:gap-12">
-          <div className="flex-1">
-            <ProductShowcase variants={variant.product.productVariants}/>
+  if (!variant) return null
+
+  const reviewAvg = getReviewAverage(
+    variant.product.reviews.map((r) => r.rating)
+  )
+
+  return (
+    <main>
+      <section className="flex flex-col lg:flex-row gap-4 lg:gap-12">
+        <div className="flex-1">
+          <ProductShowcase variants={variant.product.productVariants} />
+        </div>
+        <div className="flex flex-col flex-1">
+          <h2 className="text-2xl font-bold">{variant.product.title}</h2>
+          <ProductType variants={variant.product.productVariants} />
+          <Separator className="my-2" />
+          <p className="text-2xl font-medium py-2">
+            {formatPrice(variant.product.price)}
+          </p>
+          <div
+            dangerouslySetInnerHTML={{ __html: variant.product.description }}
+          ></div>
+          <p className="text-secondary-foreground font-medium my-2">
+            Available Colors
+          </p>
+          <div className="flex gap-4">
+            {variant.product.productVariants.map((prodVariant) => (
+              <ProductPick
+                key={prodVariant.id}
+                productID={prodVariant.productID}
+                productType={prodVariant.productType}
+                id={prodVariant.id}
+                color={prodVariant.color}
+                price={variant.product.price}
+                title={variant.product.title}
+                image={prodVariant.variantImages?.[0]?.url}
+              />
+            ))}
           </div>
-          <div className="flex flex-col flex-1">
-            <h2 className="text-2xl font-bold">{variant.product.title}</h2>
-            <div>
-              <ProductType variants={variant.product.productVariants} />
-            </div>
-            <Separator className="my-2" />
-            <p className="text-2xl font-medium py-2">
-              {formatPrice(variant.product.price)}
-            </p>
-            <div
-              dangerouslySetInnerHTML={{ __html: variant.product.description }}
-            ></div>
-            <p className="text-secondary-foreground font-medium my-2">
-              Available Colors
-            </p>
-            <div className="flex gap-4">
-              {variant.product.productVariants.map((prodVariant) => (
-                <ProductPick
-                  key={prodVariant.id}
-                  productID={prodVariant.productID}
-                  productType={prodVariant.productType}
-                  id={prodVariant.id}
-                  color={prodVariant.color}
-                  price={variant.product.price}
-                  title={variant.product.title}
-                  image={prodVariant.variantImages?.[0]?.url}
-                />
-              ))}
-            </div>
-            <AddCart/>
-          </div>
-        </section>
-         <Reviews productID={variant.productID} />
-      </main>
-    )
-  }
+          <AddCart />
+        </div>
+      </section>
+      <Reviews productID={variant.productID} />
+    </main>
+  )
 }

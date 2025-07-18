@@ -31,14 +31,12 @@ export async function generateStaticParams(): Promise<
   }))
 }
 
-// ✅ Page component with correctly typed params
-interface PageProps {
-  params: {
-    slug: string
-  }
-}
-
-export default async function Page({ params }: PageProps) {
+// ✅ Page component with correctly inlined param types
+export default async function Page({
+  params,
+}: {
+  params: { slug: string }
+}) {
   const variant = await db.query.productVariants.findFirst({
     where: eq(productVariants.id, Number(params.slug)),
     with: {

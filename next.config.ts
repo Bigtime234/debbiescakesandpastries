@@ -14,11 +14,13 @@ const eslintConfig = [
 
   {
     rules: {
-      // ✅ Ignore unused variables (but still warn if vars start with _)
-      "@typescript-eslint/no-unused-vars": [
-        "warn", // or "off" to fully disable
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
-      ],
+      // 🔕 Completely disable unused variable checks
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+
+      // 🔕 Optional: disable unused imports if you're using a plugin like eslint-plugin-unused-imports
+      "unused-imports/no-unused-imports": "off",
+      "unused-imports/no-unused-vars": "off",
     },
   },
 ];

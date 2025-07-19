@@ -5,22 +5,7 @@ import Google from "next-auth/providers/google";
 import { users, accounts } from "./schema";
 import { eq } from "drizzle-orm"
 
-// Extend NextAuth Session user type to include isOAuth
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      role?: string;
-      isOAuth?: boolean;
-    }
-  }
-}
-
-
-
+// NO type declarations here if they're in next-auth.d.ts
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db),
@@ -34,7 +19,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.role = token.role as string
       }
       if (session.user) {
-       
         session.user.name = token.name
         session.user.email = token.email as string
         session.user.isOAuth = token.isOAuth as boolean
@@ -51,7 +35,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       const existingAccount = await db.query.accounts.findFirst({
         where: eq(accounts.userId, existingUser.id),
       })
-
       token.isOAuth = !!existingAccount
       token.name = existingUser.name
       token.email = existingUser.email
@@ -63,8 +46,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID, // Make sure to set your Google Client ID
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Make sure to set your Google Client Secret
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
 });

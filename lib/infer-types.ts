@@ -41,21 +41,19 @@ export type VariantsWithProduct = InferResultType<
   { variantImages: true; variantTags: true; product: true }
 >
 
-// Replace "reviews" with a valid table name, for example "users"
+// Fixed: Should infer from "reviews" table and include user relation
 export type ReviewsWithUser = InferResultType<
-  "users",
+  "reviews",
   {
     user: true
   }
 >
 
 export type TotalOrders = InferResultType<
-  "products",
+  "orderProduct",
   {
     order: { with: { user: true } }
     product: true
-    productVariants: {
-      with: { variantImages: true }
-    }
+    productVariants: { with: { variantImages: true } }
   }
 >

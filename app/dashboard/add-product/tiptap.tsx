@@ -1,5 +1,4 @@
 "use client"
-
 import { Toggle } from "@/components/ui/toggle"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -23,7 +22,6 @@ const Tiptap = ({ val }: { val: string }) => {
             class: "list-decimal pl-4",
           },
         },
-
         bulletList: {
           HTMLAttributes: {
             class: "list-disc pl-4",
@@ -31,7 +29,6 @@ const Tiptap = ({ val }: { val: string }) => {
         },
       }),
     ],
-
     onUpdate: ({ editor }) => {
       const content = editor.getHTML()
       setValue("description", content, {
@@ -47,11 +44,11 @@ const Tiptap = ({ val }: { val: string }) => {
     },
     content: val,
   })
-
+  
   useEffect(() => {
     if (editor?.isEmpty) editor.commands.setContent(val)
   }, [val])
-
+  
   return (
     <div className="flex flex-col gap-2">
       {editor && (

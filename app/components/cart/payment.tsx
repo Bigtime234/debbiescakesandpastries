@@ -7,9 +7,22 @@ import { createOrder } from "@/lib/actions/create-order";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
 
+// Define the form data type
+type FormData = {
+  fullName: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  paymentMethod: string;
+};
+
 export default function CheckoutForm() {
   const { cart, clearCart } = useCartStore();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
     phone: '',
@@ -61,8 +74,8 @@ export default function CheckoutForm() {
       return;
     }
 
-    // Validate form
-    const requiredFields = ['fullName', 'email', 'phone', 'whatsapp', 'address', 'city', 'state', 'postalCode'];
+    // Validate form - Fixed TypeScript error
+    const requiredFields: (keyof FormData)[] = ['fullName', 'email', 'phone', 'whatsapp', 'address', 'city', 'state', 'postalCode'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
     if (missingFields.length > 0) {

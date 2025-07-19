@@ -43,17 +43,14 @@ export default function Earnings({
       .map((orderItem, index) => {
         console.log(`Processing order ${index}:`, orderItem)
         
-        // Extract the actual order object from the nested structure
-        const order = orderItem.order || orderItem
+        // Access the nested order object
+        const order = orderItem.order
+        const product = orderItem.product
         
-        // Handle different date formats - date is in order.created
+        // Get date from the order.created field
         let orderDate
-        if (order.created) {
+        if (order?.created) {
           orderDate = new Date(order.created)
-        } else if (order.createdAt) {
-          orderDate = new Date(order.createdAt)
-        } else if (order.date) {
-          orderDate = new Date(order.date)
         } else {
           console.log(`Order ${index} has no valid date field in order:`, order)
           return null
@@ -61,27 +58,23 @@ export default function Earnings({
 
         // Check if date is valid
         if (isNaN(orderDate.getTime())) {
-          console.log(`Order ${index} has invalid date:`, order.created || order.createdAt || order.date)
+          console.log(`Order ${index} has invalid date:`, order.created)
           return null
         }
 
-        // Calculate total price = product.price * quantity
+        // Get price from the product object
         let productPrice
-        if (orderItem.product && typeof orderItem.product.price === 'number') {
-          productPrice = orderItem.product.price
-        } else if (orderItem.product && typeof orderItem.product.price === 'string') {
-          productPrice = parseFloat(orderItem.product.price)
+        if (product?.price && typeof product.price === 'number') {
+          productPrice = product.price
+        } else if (product?.price && typeof product.price === 'string') {
+          productPrice = parseFloat(product.price)
         } else {
-          console.log(`Order ${index} has no valid product price`, orderItem.product)
+          console.log(`Order ${index} has no valid product price`, product?.price)
           return null
         }
 
-        let quantity = 1 // default quantity
-        if (typeof orderItem.quantity === 'number') {
-          quantity = orderItem.quantity
-        } else if (typeof orderItem.quantity === 'string') {
-          quantity = parseFloat(orderItem.quantity)
-        }
+        // Get quantity from the orderProduct item
+        let quantity = orderItem.quantity || 1
 
         if (isNaN(productPrice) || isNaN(quantity)) {
           console.log(`Order ${index} has invalid price or quantity:`, { productPrice, quantity })
@@ -93,9 +86,9 @@ export default function Earnings({
         return {
           date: orderDate,
           revenue: totalPrice,
-          id: order.id || index,
-          originalOrder: order,
-          productTitle: orderItem.product?.title || 'Unknown Product',
+          id: orderItem.id,
+          originalOrder: orderItem,
+          productTitle: product?.title || 'Unknown Product',
           quantity: quantity,
           unitPrice: productPrice
         }
@@ -114,8 +107,8 @@ export default function Earnings({
   }, [chartItems])
 
   // Helper function to group orders by day and sum revenue
-  const groupOrdersByDay = (orders) => {
-    const dailyRevenue = {}
+  const groupOrdersByDay = (orders: Array<{date: Date, revenue: number}>) => {
+    const dailyRevenue: Record<string, {date: string, revenue: number, orderCount: number}> = {}
     
     orders.forEach(item => {
       const dateKey = item.date.toISOString().split('T')[0] // YYYY-MM-DD format
@@ -131,7 +124,7 @@ export default function Earnings({
     })
     
     return Object.values(dailyRevenue)
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(day => ({
         date: new Date(day.date).toLocaleDateString('en-US', {
           month: 'short',
@@ -187,7 +180,7 @@ export default function Earnings({
   }, [monthlyChart])
 
   // Custom tooltip component for better visibility
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const orderCount = payload[0]?.payload?.orderCount || 0
       const revenue = payload[0]?.value || 0
@@ -290,7 +283,7 @@ export default function Earnings({
                 tickFormatter={(value) => `₦${value.toLocaleString()}`}
               />
               <Tooltip
-                content={<CustomTooltip />}
+                content={CustomTooltip}
                 cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
               />
               <Bar

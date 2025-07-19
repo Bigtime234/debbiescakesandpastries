@@ -140,7 +140,6 @@ export default function ProductForm() {
                     <FormControl>
                     <Tiptap 
                       val={field.value} 
-                      onChange={field.onChange}
                     />
                     </FormControl>
                   <FormMessage />

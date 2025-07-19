@@ -5,7 +5,6 @@ import {
   CardTitle,
   CardHeader,
 } from "@/components/ui/card"
-
 import {
   Table,
   TableBody,
@@ -71,9 +70,9 @@ export default function Sales({ totalOrders }: { totalOrders: TotalOrders[] }) {
                 <TableCell>₦{product.price}</TableCell>
                 <TableCell>{quantity}</TableCell>
                 <TableCell>
-                  {productVariants[0]?.variantImages[0]?.url ? (
+                  {productVariants?.variantImages?.[0]?.url ? (
                     <Image
-                      src={productVariants[0].variantImages[0].url}
+                      src={productVariants.variantImages[0].url}
                       width={48}
                       height={48}
                       alt={product.title}

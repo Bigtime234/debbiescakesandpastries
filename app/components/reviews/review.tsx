@@ -3,7 +3,6 @@ import { ReviewsWithUser } from "@/lib/infer-types"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import Image from "next/image"
-
 import Stars from "./stars"
 
 export default function Review({ reviews }: { reviews: ReviewsWithUser[] }) {

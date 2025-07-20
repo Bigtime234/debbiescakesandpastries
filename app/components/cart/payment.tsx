@@ -21,7 +21,8 @@ type FormData = {
 };
 
 export default function CheckoutForm() {
-  const { cart, clearCart } = useCartStore();
+  const { cart, clearCart, setCheckoutProgress } = useCartStore();
+  
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -34,7 +35,6 @@ export default function CheckoutForm() {
     paymentMethod: 'palmpay'
   });
 
-  const [submitted, setSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const accountNumber = '9166813017';
@@ -48,9 +48,10 @@ export default function CheckoutForm() {
   const { execute, status } = useAction(createOrder, {
     onSuccess: ({ data }) => {
       if ((data as { success?: boolean })?.success) {
-        setSubmitted(true);
         clearCart();
         toast.success("Order created successfully!");
+        // Set checkout progress to navigate to confirmation page
+        setCheckoutProgress("confirmation-page");
       }
     },
     onError: ({ error }) => {
@@ -113,41 +114,6 @@ export default function CheckoutForm() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-10 h-10 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Order Confirmed!</h2>
-          <p className="text-gray-600 mb-6">
-            Thank you for your order! We'll process it shortly and contact you via Email.
-          </p>
-          <button 
-            onClick={() => {
-              setSubmitted(false);
-              setFormData({
-                fullName: '',
-                email: '',
-                phone: '',
-                whatsapp: '',
-                address: '',
-                city: '',
-                state: '',
-                postalCode: '',
-                paymentMethod: 'palmpay'
-              });
-            }}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (cart.length === 0) {
     return (
@@ -373,14 +339,17 @@ export default function CheckoutForm() {
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-xl p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">Account Number:</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-lg font-bold text-gray-900">{accountNumber}</span>
+                <div className="bg-white rounded-xl p-4 space-y-4">
+                  {/* Account Number - Mobile First Design */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">Account Number:</div>
+                    <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                      <span className="font-mono text-lg font-bold text-gray-900 tracking-wider">
+                        {accountNumber}
+                      </span>
                       <button
                         onClick={copyAccountNumber}
-                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                        className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
                         title="Copy account number"
                       >
                         <Copy className="w-4 h-4 text-gray-500" />
@@ -388,27 +357,37 @@ export default function CheckoutForm() {
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">Account Name:</span>
-                    <span className="font-semibold text-gray-900">{accountName}</span>
+                  {/* Account Name - Stack on Mobile */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">Account Name:</div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <span className="font-semibold text-gray-900 text-sm sm:text-base">
+                        {accountName}
+                      </span>
+                    </div>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">Amount:</span>
-                    <span className="font-bold text-lg text-green-600">₦{total.toLocaleString()}</span>
+                  {/* Amount */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">Amount:</div>
+                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                      <span className="font-bold text-lg text-green-600">
+                        ₦{total.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                   
                   {copied && (
-                    <div className="text-center">
-                      <span className="text-sm text-green-600 font-medium">
+                    <div className="text-center py-2">
+                      <span className="text-sm text-green-600 font-medium bg-green-100 px-3 py-1 rounded-full">
                         ✓ Account number copied!
                       </span>
                     </div>
                   )}
                 </div>
                 
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800 leading-relaxed">
                     <strong>Payment Instructions:</strong> Transfer the exact amount ₦{total.toLocaleString()} to the account above. 
                     Your order will be processed after payment confirmation.
                   </p>

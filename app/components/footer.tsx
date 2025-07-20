@@ -15,7 +15,7 @@ const Footer: React.FC = () => {
             {/* Brand Info */}
             <div className="sm:col-span-2 lg:col-span-1">
               <h2 className="text-2xl lg:text-3xl font-bold mb-4 bg-gradient-to-r from-amber-600 via-orange-500 to-pink-500 bg-clip-text text-transparent">
-                Debbie's Cakes & Pastries
+                Debbies Cakes and Pastries
               </h2>
               <p className="text-amber-700 mb-6 text-sm lg:text-base leading-relaxed">
                 Delightful treats made with love, bringing sweetness to every celebration since day one.
@@ -159,6 +159,7 @@ const Footer: React.FC = () => {
               <Link href="#" className="hover:text-amber-800 transition-colors">Privacy Policy</Link>
               <Link href="#" className="hover:text-amber-800 transition-colors">Terms of Service</Link>
               <Link href="#" className="hover:text-amber-800 transition-colors">Cookie Policy</Link>
+              <p className="text-purple-500 font-serif text-xl">Developed by @codebyriven</p>
             </div>
           </div>
         </div>

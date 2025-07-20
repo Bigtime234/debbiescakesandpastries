@@ -97,7 +97,7 @@ export const createOrder = action
       // 5. Send email using Resend
       const { error } = await resend.emails.send({
          from: 'Your website <onboarding@resend.dev>',
-    to: "codebyriven@gmail.com", 
+    to: "debbiescakesandpastries1@gmail.com", 
         subject: `🛒 New Order from ${customerInfo.fullName}`,
         html: emailHtml,
       });

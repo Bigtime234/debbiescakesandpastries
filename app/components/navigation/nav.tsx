@@ -21,13 +21,17 @@ export default async function Nav() {
                     <ul className="flex justify-between items-center gap-4">
                         {/* Logo Section */}
                         <li className='flex-shrink-0'>
-                            <Link href={"/"} aria-label="Debbie's Cakes & Pastries" className="flex items-center rounded-md">
+                            <Link 
+                                href={"/"} 
+                                aria-label="Debbie's Cakes & Pastries" 
+                                className="block rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+                            >
                                 <Image
                                     src="/DebbiesLogopurple.jpg"
                                     alt="Debbie's Cakes & Pastries Logo"
                                     width={200}
                                     height={120}
-                                    className="h-16 w-auto md:h-20 lg:h-24 xl:h-28 rounded-md object-contain hover:scale-105 transition-all duration-300 drop-shadow-2xl filter brightness-110 contrast-110"
+                                    className="h-12 w-auto sm:h-14 md:h-16 lg:h-20 xl:h-24 rounded-xl object-cover filter brightness-110 contrast-110 saturate-110 transition-all duration-300"
                                     priority
                                 />
                             </Link>
@@ -41,7 +45,7 @@ export default async function Nav() {
                         </li>
                        
                         {/* Navigation Actions */}
-                        <li className="flex items-center gap-2 md:gap-4">
+                        <li className="flex items-center gap-2 md:gap-3 lg:gap-4">
                             {/* Cart Drawer - Only show when logged in */}
                             {session && (
                                 <div className='relative flex items-center'>
@@ -51,35 +55,32 @@ export default async function Nav() {
                             
                             {/* Login/User Button */}
                             {!session ? (
-                                <Button className="bg-white text-pink-600 hover:bg-pink-50 hover:text-pink-700 transition-all duration-200 shadow-md border-2 border-transparent hover:border-pink-200 px-3 py-2 md:px-4 md:py-2 text-sm md:text-base font-medium rounded-lg">
-                                    <Link className="flex items-center gap-2" href="/login">
-                                        <LogIn size={16} className="md:size-10"/>
-                                        <span className="hidden sm:inline">Sign in</span>
+                                <Button className="bg-white/95 text-pink-600 hover:bg-pink-50 hover:text-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-pink-200/50 hover:border-pink-300 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 text-xs sm:text-sm md:text-base font-semibold rounded-xl backdrop-blur-sm transform hover:scale-105 hover:-translate-y-0.5">
+                                    <Link className="flex items-center gap-1.5 sm:gap-2" href="/login">
+                                        <LogIn size={14} className="sm:size-4 md:size-5"/>
+                                        <span className="hidden xs:inline">Sign in</span>
+                                        <span className="xs:hidden">In</span>
                                     </Link>
                                 </Button>
                             ) : (
-                                <div className="flex items-center">
-                                    <UserButton expires={session?.expires ?? ""} user={session?.user}/>
+                                <div className="flex items-center transform hover:scale-105 transition-all duration-300">
+                                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-1 shadow-lg border border-white/20">
+                                        <UserButton expires={session?.expires ?? ""} user={session?.user}/>
+                                    </div>
                                 </div>
                             )}
                             
                             {/* About Us Button */}
-                            <Button className="bg-rose-600 text-white hover:bg-rose-400 hover:text-rose-900 transition-all duration-200 shadow-md border-2 border-transparent hover:border-rose-300 px-3 py-2 md:px-4 md:py-2 text-sm md:text-base font-medium rounded-lg">
+                            <Button className="bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-rose-300/30 hover:border-rose-200/50 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 text-xs sm:text-sm md:text-base font-semibold rounded-xl backdrop-blur-sm transform hover:scale-105 hover:-translate-y-0.5">
                                 <Link href="/socials" className="flex items-center">
                                     <span className="hidden sm:inline font-serif">About us</span>
-                                    <span className="sm:hidden font-serif">About</span>
+                                    <span className="sm:hidden font-serif text-xs">About</span>
                                 </Link>
                             </Button>
                         </li>
                     </ul>
                 </nav>
-                
-                {/* Mobile Title - Shows below navbar on smaller screens */}
-                <div className="lg:hidden bg-pink-500/90 py-2 text-center border-t border-pink-300/30">
-                    <h1 className="text-lg md:text-xl font-dancing-script font-serif text-black px-4">
-                        Welcome to Debbies cakes and pastries 😋
-                    </h1>
-                </div>
+              
                 
                 {/* Not Signed In Message */}
                 {!session && (

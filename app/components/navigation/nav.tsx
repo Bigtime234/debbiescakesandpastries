@@ -45,7 +45,7 @@ export default async function Nav() {
                         </li>
                        
                         {/* Navigation Actions */}
-                        <li className="flex items-center gap-2 md:gap-3 lg:gap-4">
+                        <li className="flex items-center gap-4 md:gap-5 lg:gap-4 sm:gap-4">
                             {/* Cart Drawer - Only show when logged in */}
                             {session && (
                                 <div className='relative flex items-center'>

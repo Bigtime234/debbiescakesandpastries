@@ -159,7 +159,7 @@ const Footer: React.FC = () => {
               <Link href="#" className="hover:text-amber-800 transition-colors">Privacy Policy</Link>
               <Link href="#" className="hover:text-amber-800 transition-colors">Terms of Service</Link>
               <Link href="#" className="hover:text-amber-800 transition-colors">Cookie Policy</Link>
-              <p className="text-purple-500 font-serif text-md">Developed by @codebyriven</p>
+              <p className="text-black font-serif text-md">Developed by @codebyriven</p>
             </div>
           </div>
         </div>

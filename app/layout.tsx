@@ -3,15 +3,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "./components/navigation/nav";
 import { Toaster } from "@/components/ui/sooner";
-import {Roboto} from "next/font/google";
+import { Cormorant_Garamond } from "next/font/google";
 // import Footer from "@/components/footer"
 // If Footer exists at './components/footer', use:
 import Footer from "./components/footer";
 
-
-
-const roboto = Roboto({
-  weight: ["400", "500", "700", "900"],
+const cormorantGaramond = Cormorant_Garamond({
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
 })
 
@@ -29,6 +27,7 @@ export const metadata: Metadata = {
   title: "Debbies cakes and pastries",
   description: "Debbies cakes and pastries",
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,15 +36,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} bg-gradient-to-b from-[#b1006b] to-[#f7a7d6] ${geistMono.variable} antialiased`}
+        className={`${cormorantGaramond.className} ${geistSans.variable} ${geistMono.variable} bg-[#F2BBB6] antialiased`}
       >
         <Nav />
-
         {/* Full-width wrapper (no padding) */}
         <div className="w-full">
           {children}
         </div>
-
         <Toaster />
         <Footer />
       </body>

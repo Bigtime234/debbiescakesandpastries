@@ -25,20 +25,22 @@ export async function generateStaticParams(): Promise<
     },
     orderBy: (productVariants, { desc }) => [desc(productVariants.id)],
   })
-
   return data.map((variant) => ({
     slug: variant.id.toString(),
   }))
 }
 
-// ✅ Page component with correctly inlined param types
+// ✅ Updated Page component with Promise<{ slug: string }> params type
 export default async function Page({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
+  // ✅ Await the params Promise to get the actual values
+  const { slug } = await params
+  
   const variant = await db.query.productVariants.findFirst({
-    where: eq(productVariants.id, Number(params.slug)),
+    where: eq(productVariants.id, Number(slug)),
     with: {
       product: {
         with: {
@@ -53,14 +55,14 @@ export default async function Page({
       },
     },
   })
-
+  
   // If not found, return null or a fallback
   if (!variant) return null
-
+  
   const reviewAvg = getReviewAverage(
     variant.product.reviews.map((r) => r.rating)
   )
-
+  
   return (
     <main>
       <section className="flex flex-col lg:flex-row gap-4 lg:gap-12">

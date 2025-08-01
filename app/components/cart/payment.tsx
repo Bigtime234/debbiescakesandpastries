@@ -40,9 +40,10 @@ export default function CheckoutForm() {
   const accountNumber = '9166813017';
   const accountName = 'Johnson Busayo Deborah';
 
-  // Calculate total from cart
+  // Calculate total from cart - handle custom pricing
   const total = cart.reduce((sum, item) => {
-    return sum + (item.price * item.variant.quantity);
+    const itemPrice = item.customization?.totalPrice || item.price;
+    return sum + (itemPrice * item.variant.quantity);
   }, 0);
 
   const { execute, status } = useAction(createOrder, {
@@ -84,12 +85,16 @@ export default function CheckoutForm() {
       return;
     }
 
-    // Prepare order data
+    // Prepare order data with complete product information
     const orderData = {
       products: cart.map(item => ({
         productID: item.id,
         variantID: item.variant.variantID,
         quantity: item.variant.quantity,
+        name: item.name,
+        price: item.customization?.totalPrice || item.price, // Use custom price if available
+        image: item.image,
+        customization: item.customization, // Include customization data
       })),
       status: "pending",
       total,
@@ -141,26 +146,68 @@ export default function CheckoutForm() {
           <p className="text-gray-600 text-lg">Total: ₦{total.toLocaleString()}</p>
         </div>
 
-        {/* Order Summary */}
+        {/* Enhanced Order Summary with Customization Details */}
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6">
             <h2 className="text-2xl font-bold text-white">Order Summary</h2>
           </div>
           <div className="p-6">
-            {cart.map((item) => (
-              <div key={`${item.id}-${item.variant.variantID}`} className="flex items-center justify-between py-4 border-b last:border-b-0">
-                <div className="flex items-center space-x-4">
-                  <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
-                  <div>
-                    <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-sm text-gray-600">Quantity: {item.variant.quantity}</p>
+            {cart.map((item) => {
+              const itemPrice = item.customization?.totalPrice || item.price;
+              const itemTotal = itemPrice * item.variant.quantity;
+              
+              return (
+                <div key={`${item.id}-${item.variant.variantID}-${JSON.stringify(item.customization)}`} 
+                     className="py-4 border-b last:border-b-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0" 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                        <p className="text-sm text-gray-600">Qty: {item.variant.quantity}</p>
+                        
+                        {/* Display customization details */}
+                        {item.customization && (
+                          <div className="mt-2 p-3 bg-pink-50 rounded-lg border border-pink-200">
+                            <div className="text-xs text-pink-800 font-medium mb-1">Custom Cake Details:</div>
+                            <div className="text-xs text-gray-700 space-y-1">
+                              <div><strong>Size:</strong> {item.customization.size}</div>
+                              <div><strong>Layers:</strong> {item.customization.layers}</div>
+                              {item.customization.flavour && item.customization.flavour !== 'None' && (
+                                <div><strong>Flavour:</strong> {item.customization.flavour}</div>
+                              )}
+                              {item.customization.toppings && item.customization.toppings.length > 0 && (
+                                <div><strong>Toppings:</strong> {item.customization.toppings.join(', ')}</div>
+                              )}
+                              {item.customization.addOns && item.customization.addOns.length > 0 && (
+                                <div><strong>Add-Ons:</strong> {item.customization.addOns.join(', ')}</div>
+                              )}
+                              {item.customization.message && (
+                                <div><strong>Message:</strong> "{item.customization.message}"</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <div className="font-semibold text-gray-900">
+                        ₦{itemTotal.toLocaleString()}
+                      </div>
+                      {item.customization && (
+                        <div className="text-xs text-gray-500">
+                          ₦{itemPrice.toLocaleString()} each
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="font-semibold">
-                  ₦{(item.price * item.variant.quantity).toLocaleString()}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

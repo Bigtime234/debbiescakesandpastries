@@ -13,8 +13,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useMemo } from "react"
 import formatPrice from "@/lib/format-price"
 import Image from "next/image"
-import { MinusCircle, PlusCircle } from "lucide-react"
-import { createId } from "@paralleldrive/cuid2"
+import { MinusCircle, PlusCircle, Cake } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Lottie from "lottie-react"
 import emptycart from "@/public/empty-box.json"
@@ -29,11 +28,48 @@ export default function CartItems() {
     }, 0)
   }, [cart])
 
+  // ✅ FIXED: Use index-based keys for stable animation
   const priceInLetters = useMemo(() => {
-    return [...totalPrice.toFixed(2).toString()].map((letter) => {
-      return { letter, id: createId() }
+    return [...totalPrice.toFixed(2).toString()].map((letter, index) => {
+      return { letter, id: `price-${index}-${letter}` } // Stable key based on position and value
     })
   }, [totalPrice])
+
+  // Helper function to render customization details
+  const renderCustomizationDetails = (item: any) => {
+    const customization = item.customization;
+    if (!customization) return null;
+
+    return (
+      <div className="mt-2 p-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
+        <div className="flex items-center gap-1 mb-1">
+          <Cake className="w-3 h-3 text-pink-500" />
+          <span className="text-xs font-semibold text-pink-600">Custom Cake Details:</span>
+        </div>
+        <div className="text-xs text-gray-600 space-y-1">
+          <div className="flex flex-wrap gap-2">
+            <span><strong>Size:</strong> {customization.size}</span>
+            <span><strong>Layers:</strong> {customization.layers}</span>
+          </div>
+          {customization.flavour && customization.flavour !== 'None' && (
+            <div><strong>Flavour:</strong> {customization.flavour}</div>
+          )}
+          {customization.upgrade && customization.upgrade !== 'None' && (
+            <div><strong>Upgrade:</strong> {customization.upgrade}</div>
+          )}
+          {customization.toppings && customization.toppings.length > 0 && (
+            <div><strong>Toppings:</strong> {customization.toppings.join(', ')}</div>
+          )}
+          {customization.addOns && customization.addOns.length > 0 && (
+            <div><strong>Add-ons:</strong> {customization.addOns.join(', ')}</div>
+          )}
+          {customization.message && (
+            <div><strong>Message:</strong> "{customization.message}"</div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <motion.div className="flex flex-col items-center bg-[#F7F4E9]">
@@ -47,7 +83,7 @@ export default function CartItems() {
             <h2 className="text-2xl text-muted-foreground text-center">
               Your cart is empty
             </h2>
-            <Lottie className="h-64" animationData={emptycart}  />
+            <Lottie className="h-64" animationData={emptycart} />
           </motion.div>
         </div>
       )}
@@ -57,7 +93,7 @@ export default function CartItems() {
           <div className="block md:hidden space-y-4">
             {cart.map((item, index) => (
               <motion.div 
-                key={(item.id + item.variant.variantID).toString()} 
+                key={`mobile-${item.id}-${item.variant.variantID}`} // ✅ FIXED: More descriptive key
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -84,6 +120,9 @@ export default function CartItems() {
                         {formatPrice(item.price)}
                       </div>
                       
+                      {/* Render customization details for mobile */}
+                      {renderCustomizationDetails(item)}
+                      
                       {/* Quantity controls for mobile */}
                       <div className="flex items-center gap-4 mt-4">
                         <motion.button
@@ -93,6 +132,7 @@ export default function CartItems() {
                             removeFromCart({
                               ...item,
                               variant: {
+                                ...item.variant,
                                 quantity: 1,
                                 variantID: item.variant.variantID,
                               },
@@ -114,6 +154,7 @@ export default function CartItems() {
                             addToCart({
                               ...item,
                               variant: {
+                                ...item.variant,
                                 quantity: 1,
                                 variantID: item.variant.variantID,
                               },
@@ -135,25 +176,32 @@ export default function CartItems() {
           <div className="hidden md:block">
             <div className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 p-1 rounded-2xl shadow-2xl">
               <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 backdrop-blur-sm">
-                <Table className="max-w-2xl mx-auto">
+                <Table className="max-w-4xl mx-auto">
                   <TableHeader>
                     <TableRow className="border-b border-gray-200 dark:border-gray-700">
-                      <TableCell className="font-bold text-gray-800 dark:text-white">Product</TableCell>
-                      <TableCell className="font-bold text-gray-800 dark:text-white">Price</TableCell>
-                      <TableCell className="font-bold text-gray-800 dark:text-white">Image</TableCell>
-                      <TableCell className="font-bold text-gray-800 dark:text-white">Quantity</TableCell>
+                      <TableHead className="font-bold text-gray-800 dark:text-white">Product</TableHead>
+                      <TableHead className="font-bold text-gray-800 dark:text-white">Price</TableHead>
+                      <TableHead className="font-bold text-gray-800 dark:text-white">Image</TableHead>
+                      <TableHead className="font-bold text-gray-800 dark:text-white">Quantity</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {cart.map((item, index) => (
-                      <motion.tr 
-                        key={(item.id + item.variant.variantID).toString()}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
+                      <TableRow 
+                        key={`desktop-${item.id}-${item.variant.variantID}`} // ✅ FIXED: More descriptive key
                         className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                       >
-                        <TableCell className="font-medium text-gray-800 dark:text-white">{item.name}</TableCell>
+                        <TableCell className="font-medium text-gray-800 dark:text-white max-w-xs">
+                          <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                          >
+                            <div className="font-semibold">{item.name}</div>
+                            {/* Render customization details for desktop */}
+                            {renderCustomizationDetails(item)}
+                          </motion.div>
+                        </TableCell>
                         <TableCell>
                           <span className="inline-block px-2 py-1 bg-gradient-to-r from-green-400 to-blue-500 text-white text-sm font-semibold rounded-full">
                             {formatPrice(item.price)}
@@ -183,6 +231,7 @@ export default function CartItems() {
                                 removeFromCart({
                                   ...item,
                                   variant: {
+                                    ...item.variant,
                                     quantity: 1,
                                     variantID: item.variant.variantID,
                                   },
@@ -204,6 +253,7 @@ export default function CartItems() {
                                 addToCart({
                                   ...item,
                                   variant: {
+                                    ...item.variant,
                                     quantity: 1,
                                     variantID: item.variant.variantID,
                                   },
@@ -215,7 +265,7 @@ export default function CartItems() {
                             </motion.button>
                           </div>
                         </TableCell>
-                      </motion.tr>
+                      </TableRow>
                     ))}
                   </TableBody>
                 </Table>
@@ -232,7 +282,7 @@ export default function CartItems() {
             <span>Total: #</span>
             <AnimatePresence mode="popLayout">
               {priceInLetters.map((letter, i) => (
-                <motion.div key={letter.id}>
+                <motion.div key={letter.id}> {/* ✅ FIXED: Now uses stable keys */}
                   <motion.span
                     initial={{ y: 20 }}
                     animate={{ y: 0 }}

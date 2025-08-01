@@ -1,3 +1,4 @@
+// app/products/[slug]/page.tsx
 import ProductType from "@/app/components/products/product-type"
 import { db } from "@/server"
 import { productVariants } from "@/server/schema"
@@ -9,14 +10,11 @@ import ProductShowcase from "@/app/components/products/product-showcase"
 import Reviews from "@/app/components/reviews/reviews"
 import { getReviewAverage } from "@/lib/review-avarage"
 import AddCart from "@/app/components/cart/add-cart"
+import CakeCustomizer from "@/app/components/products/cake-customizer"
 
-// Revalidate every 60 seconds
 export const revalidate = 60
 
-// ✅ Required by Next.js for dynamic static pages
-export async function generateStaticParams(): Promise<
-  { slug: string }[]
-> {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   const data = await db.query.productVariants.findMany({
     with: {
       variantImages: true,
@@ -30,14 +28,15 @@ export async function generateStaticParams(): Promise<
   }))
 }
 
-// ✅ Updated Page component with Promise<{ slug: string }> params type
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  // ✅ Await the params Promise to get the actual values
   const { slug } = await params
+  const search = searchParams ? await searchParams : {}
   
   const variant = await db.query.productVariants.findFirst({
     where: eq(productVariants.id, Number(slug)),
@@ -56,13 +55,31 @@ export default async function Page({
     },
   })
   
-  // If not found, return null or a fallback
-  if (!variant) return null
+  if (!variant) {
+    return (
+      <main className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Product Not Found</h1>
+          <p className="text-gray-600 mt-2">
+            The product with ID "{slug}" could not be found.
+          </p>
+        </div>
+      </main>
+    )
+  }
   
   const reviewAvg = getReviewAverage(
     variant.product.reviews.map((r) => r.rating)
   )
-  
+
+  const isCakeProduct = 
+    variant.product.title.toLowerCase().includes('cake') || 
+    variant.productType.toLowerCase().includes('cake') ||
+    variant.product.description?.toLowerCase().includes('cake') ||
+    variant.product.productVariants.some(v => 
+      v.productType.toLowerCase().includes('cake')
+    )
+    
   return (
     <main>
       <section className="flex flex-col lg:flex-row gap-4 lg:gap-12">
@@ -75,9 +92,13 @@ export default async function Page({
             <ProductType variants={variant.product.productVariants} />
           </div>
           <Separator className="my-2" />
-          <p className="text-2xl font-medium py-2">
-            {formatPrice(variant.product.price)}
-          </p>
+          
+          <div id="price-display">
+            <p className="text-2xl font-medium py-2">
+              {formatPrice(variant.product.price)}
+            </p>
+          </div>
+          
           <div
             dangerouslySetInnerHTML={{ __html: variant.product.description }}
           />
@@ -98,7 +119,15 @@ export default async function Page({
               />
             ))}
           </div>
-          <AddCart />
+          
+          {isCakeProduct ? (
+            <CakeCustomizer 
+              variant={variant}
+              basePrice={variant.product.price}
+            />
+          ) : (
+            <AddCart variant={variant} />
+          )}
         </div>
       </section>
       <Reviews productID={variant.productID} />

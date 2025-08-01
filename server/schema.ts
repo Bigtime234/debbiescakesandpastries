@@ -7,20 +7,16 @@ import {
   integer,
   pgEnum,
   serial,
+  varchar,
+  json,
   index,
   real
 } from "drizzle-orm/pg-core"
-import postgres from "postgres"
-import { drizzle } from "drizzle-orm/postgres-js"
-import type { AdapterAccountType } from "next-auth/adapters"
 import { createId } from "@paralleldrive/cuid2"
-import { InferSelectModel, relations } from "drizzle-orm"
+import { relations } from "drizzle-orm"
+import type { AdapterAccountType } from "next-auth/adapters"
 
-
-export const RoleEnum =pgEnum("roles",["user", "admin",])
-
-
-
+export const RoleEnum = pgEnum("roles", ["user", "admin"])
 
 export const users = pgTable("user", {
   id: text("id")
@@ -32,9 +28,9 @@ export const users = pgTable("user", {
   image: text("image"),
   password: text("password"),
   twoFactorEnabled: boolean("twoFactorEnabled").default(false),
-  role:RoleEnum("roles").default("user"),
+  role: RoleEnum("roles").default("user"),
 })
- 
+
 export const accounts = pgTable(
   "account",
   {
@@ -52,19 +48,17 @@ export const accounts = pgTable(
     id_token: text("id_token"),
     session_state: text("session_state"),
   },
-  (account) => [
-    {
-      compoundKey: primaryKey({
-        columns: [account.provider, account.providerAccountId],
-      }),
-    },
-  ]
+  (account) => ({
+    compoundKey: primaryKey({
+      columns: [account.provider, account.providerAccountId],
+    }),
+  })
 )
+
 export const emailTokens = pgTable(
   "email_tokens",
   {
-    id: text("id") .notNull()
-   .$defaultFn(() => createId()),
+    id: text("id").notNull().$defaultFn(() => createId()),
     token: text("token").notNull(),
     expires: timestamp("expires", { mode: "date" }).notNull(),
     email: text("email").notNull(),
@@ -142,6 +136,87 @@ export const variantTags = pgTable("variantTags", {
     .references(() => productVariants.id, { onDelete: "cascade" }),
 })
 
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: serial("id").primaryKey(),
+    rating: real("rating").notNull(),
+    userID: text("userID")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    productID: serial("productID")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    comment: text("comment").notNull(),
+    created: timestamp("created").defaultNow(),
+  },
+  (table) => ({
+    productIdx: index("productIdx").on(table.productID),
+    userIdx: index("userIdx").on(table.userID),
+  })
+)
+
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  userID: text("userID")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  total: real("total").notNull(),
+  status: text("status").notNull().default("pending"),
+  created: timestamp("created").defaultNow(),
+  receiptURL: text("receiptURL"),
+  paymentIntentID: text("paymentIntentID"),
+  paymentMethod: text("paymentMethod").default("PalmPay"),
+  customerName: text("customerName"),
+  customerEmail: text("customerEmail"),
+  customerPhone: text("customerPhone"),
+  customerWhatsapp: text("customerWhatsapp"),
+  shippingAddress: text("shippingAddress"),
+  shippingCity: text("shippingCity"),
+  shippingState: text("shippingState"),
+  shippingPostalCode: text("shippingPostalCode"),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+})
+
+export const customOrders = pgTable("custom_orders", {
+  id: serial("id").primaryKey(),
+  orderID: integer("order_id").references(() => orders.id).notNull(),
+  userID: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  size: varchar("size", { length: 50 }).notNull(),
+  layers: varchar("layers", { length: 50 }).notNull(),
+  flavour: varchar("flavour", { length: 50 }),
+  creamType: varchar("cream_type", { length: 100 }),
+  toppings: varchar("toppings", { length: 100 }),
+  addOns: json("add_ons").$type<string[]>(),
+  message: text("message"),
+  total: integer("total").notNull(),
+  fullName: varchar("full_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  whatsapp: varchar("whatsapp", { length: 20 }),
+  address: varchar("address", { length: 500 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 100 }).notNull(),
+  postalCode: varchar("postal_code", { length: 20 }).notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
+  created: timestamp("created").defaultNow(),
+})
+
+export const orderProduct = pgTable("orderProduct", {
+  id: serial("id").primaryKey(),
+  quantity: integer("quantity").notNull(),
+  productVariantID: serial("productVariantID")
+    .notNull()
+    .references(() => productVariants.id, { onDelete: "cascade" }),
+  productID: serial("productID")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  orderID: serial("orderID")
+    .notNull()
+    .references(() => orders.id, { onDelete: "cascade" }),
+})
+
+// Relations
 export const productRelations = relations(products, ({ many }) => ({
   productVariants: many(productVariants, { relationName: "productVariants" }),
   reviews: many(reviews, { relationName: "reviews" }),
@@ -176,28 +251,6 @@ export const variantTagsRelations = relations(variantTags, ({ one }) => ({
   }),
 }))
 
-export const reviews = pgTable(
-  "reviews",
-  {
-    id: serial("id").primaryKey(),
-    rating: real("rating").notNull(),
-    userID: text("userID")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    productID: serial("productID")
-      .notNull()
-      .references(() => products.id, { onDelete: "cascade" }),
-    comment: text("comment").notNull(),
-    created: timestamp("created").defaultNow(),
-  },
-  (table) => {
-    return {
-      productIdx: index("productIdx").on(table.productID),
-      userIdx: index("userIdx").on(table.userID),
-    }
-  }
-)
-
 export const reviewRelations = relations(reviews, ({ one }) => ({
   user: one(users, {
     fields: [reviews.userID],
@@ -214,38 +267,8 @@ export const reviewRelations = relations(reviews, ({ one }) => ({
 export const userRelations = relations(users, ({ many }) => ({
   reviews: many(reviews, { relationName: "user_reviews" }),
   orders: many(orders, { relationName: "user_orders" }),
+  customOrders: many(customOrders, { relationName: "user_custom_orders" }),
 }))
-
-// Updated orders table with all customer and shipping details
-export const orders = pgTable("orders", {
-  id: serial("id").primaryKey(),
-  userID: text("userID")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  total: real("total").notNull(),
-  status: text("status").notNull().default("pending"), // pending, processing, succeeded, completed, cancelled
-  created: timestamp("created").defaultNow(),
-  receiptURL: text("receiptURL"),
-  paymentIntentID: text("paymentIntentID"),
-  
-  // Payment information
-  paymentMethod: text("paymentMethod").default("PalmPay"),
-  
-  // Customer information
-  customerName: text("customerName"),
-  customerEmail: text("customerEmail"),
-  customerPhone: text("customerPhone"),
-  customerWhatsapp: text("customerWhatsapp"),
-  
-  // Shipping information
-  shippingAddress: text("shippingAddress"),
-  shippingCity: text("shippingCity"),
-  shippingState: text("shippingState"),
-  shippingPostalCode: text("shippingPostalCode"),
-  
-  // Additional timestamps
-  updatedAt: timestamp("updatedAt").defaultNow(),
-})
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   user: one(users, {
@@ -254,21 +277,25 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
     relationName: "user_orders",
   }),
   orderProduct: many(orderProduct, { relationName: "orderProduct" }),
+  customOrder: one(customOrders, {
+    fields: [orders.id],
+    references: [customOrders.orderID],
+    relationName: "customOrder",
+  }),
 }))
 
-export const orderProduct = pgTable("orderProduct", {
-  id: serial("id").primaryKey(),
-  quantity: integer("quantity").notNull(),
-  productVariantID: serial("productVariantID")
-    .notNull()
-    .references(() => productVariants.id, { onDelete: "cascade" }),
-  productID: serial("productID")
-    .notNull()
-    .references(() => products.id, { onDelete: "cascade" }),
-  orderID: serial("orderID")
-    .notNull()
-    .references(() => orders.id, { onDelete: "cascade" }),
-})
+export const customOrdersRelations = relations(customOrders, ({ one }) => ({
+  order: one(orders, {
+    fields: [customOrders.orderID],
+    references: [orders.id],
+    relationName: "customOrder",
+  }),
+  user: one(users, {
+    fields: [customOrders.userID],
+    references: [users.id],
+    relationName: "user_custom_orders",
+  }),
+}))
 
 export const orderProductRelations = relations(orderProduct, ({ one }) => ({
   order: one(orders, {

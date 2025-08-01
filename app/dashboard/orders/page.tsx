@@ -40,7 +40,7 @@ import { Button } from "@/components/ui/button"
 import { 
   Package, User, Phone, MapPin, Mail, 
   MessageCircle, Shield, CheckCircle, X, 
-  MoreHorizontal, CalendarClock
+  MoreHorizontal, CalendarClock, Cake
 } from "lucide-react"
 import Image from "next/image"
 
@@ -90,15 +90,23 @@ type OrderProductType = {
     id: number
     title: string
     price: number
-    // add other product fields as needed
   }
   productVariants: {
     id: number
     color: string
     variantImages: { url: string }[]
-    // add other variant fields as needed
   }
   quantity: number
+}
+
+type CustomOrderType = {
+  size: string
+  layers: string
+  flavour?: string | null
+  creamType: string
+  toppings: string
+  addOns: string[]
+  message?: string | null
 }
 
 type OrderType = {
@@ -120,6 +128,7 @@ type OrderType = {
   shippingPostalCode: string | null
   updatedAt: Date | null
   orderProduct: OrderProductType[]
+  customOrder: CustomOrderType | null
 }
 
 export default async function OrdersPage() {
@@ -128,7 +137,7 @@ export default async function OrdersPage() {
 
   const isAdmin = session.user.role === "admin"
   
-  const ordersList: OrderType[] = await db.query.orders.findMany({
+  const ordersList = await db.query.orders.findMany({
     where: isAdmin ? undefined : eq(orders.userID, session.user.id),
     with: {
       orderProduct: {
@@ -136,10 +145,12 @@ export default async function OrdersPage() {
           product: true,
           productVariants: { with: { variantImages: true } }
         }
-      }
+      },
+      // Include custom order if it exists in your schema
+      customOrder: true
     },
     orderBy: (orders, { desc }) => [desc(orders.created)]
-  })
+  }) as OrderType[]
 
   return (
     <div className="container mx-auto py-8">
@@ -231,20 +242,28 @@ export default async function OrdersPage() {
                       </TableCell>
                       
                       <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <Badge
-                          className={cn(
-                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                            {
-                              "bg-yellow-100 text-yellow-800": order.status === "pending",
-                              "bg-blue-100 text-blue-800": order.status === "processing",
-                              "bg-green-100 text-green-800": order.status === "succeeded",
-                              "bg-purple-100 text-purple-800": order.status === "completed",
-                              "bg-red-100 text-red-800": order.status === "cancelled",
-                            }
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            className={cn(
+                              "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                              {
+                                "bg-yellow-100 text-yellow-800": order.status === "pending",
+                                "bg-blue-100 text-blue-800": order.status === "processing",
+                                "bg-green-100 text-green-800": order.status === "succeeded",
+                                "bg-purple-100 text-purple-800": order.status === "completed",
+                                "bg-red-100 text-red-800": order.status === "cancelled",
+                              }
+                            )}
+                          >
+                            {order.status}
+                          </Badge>
+                          {order.customOrder && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <Cake className="h-3 w-3" />
+                              Custom
+                            </Badge>
                           )}
-                        >
-                          {order.status}
-                        </Badge>
+                        </div>
                       </TableCell>
                       
                       <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -282,6 +301,12 @@ export default async function OrdersPage() {
                               <DialogTitle className="flex items-center gap-2">
                                 Order #{order.id}
                                 {isAdmin && <Badge variant="secondary">Admin View</Badge>}
+                                {order.customOrder && (
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    <Cake className="h-3 w-3" />
+                                    Custom Cake
+                                  </Badge>
+                                )}
                               </DialogTitle>
                               <DialogDescription>
                                 Order details and information
@@ -390,60 +415,134 @@ export default async function OrdersPage() {
                                 </Card>
                               </div>
 
-                              {/* Order Items */}
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle className="flex items-center gap-2 text-lg">
-                                    <Package className="h-5 w-5" />
-                                    Ordered Items (Total: {order.orderProduct.length})
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead className="w-[100px]">Image</TableHead>
-                                        <TableHead>Product</TableHead>
-                                        <TableHead>Price</TableHead>
-                                        <TableHead>Qty</TableHead>
-                                        <TableHead className="text-right">Total</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {order.orderProduct.map(({ product, productVariants, quantity }) => (
-                                        <TableRow key={`${product.id}-${productVariants.id}`}>
-                                          <TableCell>
-                                            <Image
-                                              src={productVariants.variantImages[0]?.url || "/placeholder.jpg"}
-                                              width={60}
-                                              height={60}
-                                              alt={product.title}
-                                              className="rounded-md object-cover"
-                                            />
-                                          </TableCell>
-                                          <TableCell className="font-medium">
-                                            {product.title}
-                                            <div className="flex items-center gap-2 mt-1">
-                                              <div 
-                                                className="h-3 w-3 rounded-full border" 
-                                                style={{ backgroundColor: productVariants.color }}
-                                              />
-                                              <span className="text-xs capitalize text-muted-foreground">
-                                                {productVariants.color}
-                                              </span>
+                              {/* Enhanced Custom Cake Details */}
+                              {order.customOrder && (
+                                <Card>
+                                  <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-lg">
+                                      <Cake className="h-5 w-5 text-pink-600" />
+                                      Custom Cake Details
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="p-4 bg-pink-50 rounded-lg border-l-4 border-pink-400">
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                          <p className="text-sm font-medium text-pink-800">Size</p>
+                                          <p className="text-gray-700">{order.customOrder.size}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-medium text-pink-800">Layers</p>
+                                          <p className="text-gray-700">{order.customOrder.layers}</p>
+                                        </div>
+                                        {order.customOrder.flavour && (
+                                          <div>
+                                            <p className="text-sm font-medium text-pink-800">Flavour</p>
+                                            <p className="text-gray-700">{order.customOrder.flavour}</p>
+                                          </div>
+                                        )}
+                                        <div>
+                                          <p className="text-sm font-medium text-pink-800">Cream Type</p>
+                                          <p className="text-gray-700">{order.customOrder.creamType}</p>
+                                        </div>
+                                        {order.customOrder.toppings && (
+                                          <div>
+                                            <p className="text-sm font-medium text-pink-800">Toppings</p>
+                                            <p className="text-gray-700">{order.customOrder.toppings}</p>
+                                          </div>
+                                        )}
+                                        {order.customOrder.addOns && order.customOrder.addOns.length > 0 && (
+                                          <div className="md:col-span-2">
+                                            <p className="text-sm font-medium text-pink-800 mb-2">Add-Ons</p>
+                                            <div className="flex flex-wrap gap-2">
+                                              {order.customOrder.addOns.map((addOn, index) => (
+                                                <Badge key={index} variant="outline" className="bg-white">
+                                                  {addOn}
+                                                </Badge>
+                                              ))}
                                             </div>
-                                          </TableCell>
-                                          <TableCell>₦{product.price.toLocaleString()}</TableCell>
-                                          <TableCell>{quantity}</TableCell>
-                                          <TableCell className="text-right font-semibold">
-                                            ₦{(product.price * quantity).toLocaleString()}
-                                          </TableCell>
+                                          </div>
+                                        )}
+                                        {order.customOrder.message && (
+                                          <div className="md:col-span-2">
+                                            <p className="text-sm font-medium text-pink-800">Special Message</p>
+                                            <p className="text-gray-700 italic bg-white p-2 rounded mt-1">
+                                              "{order.customOrder.message}"
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )}
+
+                              {/* Order Items */}
+                              {order.orderProduct.length > 0 && (
+                                <Card>
+                                  <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-lg">
+                                      <Package className="h-5 w-5" />
+                                      Ordered Items (Total: {order.orderProduct.length})
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead className="w-[100px]">Image</TableHead>
+                                          <TableHead>Product</TableHead>
+                                          <TableHead>Price</TableHead>
+                                          <TableHead>Qty</TableHead>
+                                          <TableHead className="text-right">Total</TableHead>
                                         </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </CardContent>
-                              </Card>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {order.orderProduct.map(({ product, productVariants, quantity }) => (
+                                          <TableRow key={`${product.id}-${productVariants.id}`}>
+                                            <TableCell>
+                                              <Image
+                                                src={productVariants.variantImages[0]?.url || "/placeholder.jpg"}
+                                                width={60}
+                                                height={60}
+                                                alt={product.title}
+                                                className="rounded-md object-cover"
+                                              />
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                              {product.title}
+                                              <div className="flex items-center gap-2 mt-1">
+                                                <div 
+                                                  className="h-3 w-3 rounded-full border" 
+                                                  style={{ backgroundColor: productVariants.color }}
+                                                />
+                                                <span className="text-xs capitalize text-muted-foreground">
+                                                  {productVariants.color}
+                                                </span>
+                                              </div>
+                                            </TableCell>
+                                            <TableCell>₦{product.price.toLocaleString()}</TableCell>
+                                            <TableCell>{quantity}</TableCell>
+                                            <TableCell className="text-right font-semibold">
+                                              ₦{(product.price * quantity).toLocaleString()}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+
+                                    {/* Order Total */}
+                                    <div className="mt-4 pt-4 border-t">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-lg font-semibold">Order Total:</span>
+                                        <span className="text-2xl font-bold text-green-600">
+                                          ₦{order.total.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )}
                             </div>
                           </DialogContent>
                         </Dialog>
